@@ -1,0 +1,315 @@
+{
+ "version": "1.0",
+ "descripcion": "Guion de demostración de Cabina Abierta: la secuencia de acciones del asistente que vivieron en el estudio (tareas t01 a t13) más cinco acciones extra del catálogo (x01 a x03). Cada paso: lo que dice la persona, lo que responde el asistente y las llamadas a herramientas que ejecuta, traducidas a vehicle.set.",
+ "pasos": [
+  {
+   "id": "reset",
+   "titulo": "Estado inicial",
+   "persona": null,
+   "agente": null,
+   "reset": {
+    "climate_temperature_driver": 22,
+    "climate_temperature_passenger": 22,
+    "fan_speed": 1,
+    "head_lights_low_beams": false
+   }
+  },
+  {
+   "id": "p00",
+   "titulo": "Práctica: música",
+   "persona": "Ponme música.",
+   "agente": "Listo, ya suena.",
+   "acciones": [
+    {
+     "tool": "play_music",
+     "set": {}
+    }
+   ]
+  },
+  {
+   "id": "t01",
+   "titulo": "Navegación directa",
+   "persona": "Llévame a la gasolinera más cercana.",
+   "agente": "Listo, vamos a la gasolinera más cercana, a dos kilómetros.",
+   "acciones": [
+    {
+     "tool": "set_navigation_destination",
+     "set": {
+      "navigation_active": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "t02",
+   "titulo": "Clima directa",
+   "persona": "Bájale a la temperatura, déjala en 19.",
+   "agente": "Listo, 19 grados para ti.",
+   "acciones": [
+    {
+     "tool": "set_climate_temperature",
+     "set": {
+      "climate_temperature_driver": 19
+     }
+    }
+   ]
+  },
+  {
+   "id": "t03",
+   "titulo": "Visibilidad: desempañar",
+   "persona": "El parabrisas está empañado, desempáñalo.",
+   "agente": "Listo, prendí el desempañador con el aire al parabrisas.",
+   "acciones": [
+    {
+     "tool": "set_fan_speed",
+     "set": {
+      "fan_speed": 3
+     }
+    },
+    {
+     "tool": "set_fan_airflow_direction",
+     "set": {
+      "fan_airflow_direction": "WINDSHIELD"
+     }
+    },
+    {
+     "tool": "set_air_conditioning",
+     "set": {
+      "air_conditioning": true
+     }
+    },
+    {
+     "tool": "set_window_defrost",
+     "set": {
+      "window_front_defrost": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "t04",
+   "titulo": "Luz de lectura del copiloto",
+   "persona": "Prende la luz de lectura de mi copiloto.",
+   "agente": "Listo, luz de lectura del copiloto encendida.",
+   "acciones": [
+    {
+     "tool": "set_reading_light",
+     "set": {
+      "reading_light_passenger": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "t05",
+   "titulo": "Ambigua: hambre",
+   "persona": "Tengo hambre.",
+   "agente": "¿Te busco un restaurante o algo rápido en el camino?",
+   "pregunta": true,
+   "acciones": []
+  },
+  {
+   "id": "t06",
+   "titulo": "Silla calientica y temperatura",
+   "persona": "Hace frío, ponme la silla calientica y súbele a la temperatura.",
+   "agente": "Listo, silla en dos y 24 grados.",
+   "acciones": [
+    {
+     "tool": "set_seat_heating",
+     "set": {
+      "seat_heating_driver": 2
+     }
+    },
+    {
+     "tool": "set_climate_temperature",
+     "set": {
+      "climate_temperature_driver": 24
+     }
+    }
+   ]
+  },
+  {
+   "id": "t07",
+   "titulo": "Antiniebla con política",
+   "persona": "Prende las exploradoras.",
+   "agente": "Listo, prendí las bajas y las antiniebla.",
+   "acciones": [
+    {
+     "tool": "set_head_lights_low_beams",
+     "set": {
+      "head_lights_low_beams": true
+     }
+    },
+    {
+     "tool": "set_fog_lights",
+     "set": {
+      "fog_lights": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "t08",
+   "titulo": "Luz ambiental",
+   "persona": "Pon la luz ambiental en azul.",
+   "agente": "Listo, luz ambiental azul.",
+   "acciones": [
+    {
+     "tool": "set_ambient_lights",
+     "set": {
+      "ambient_light": "BLUE"
+     }
+    }
+   ]
+  },
+  {
+   "id": "t09",
+   "titulo": "Dos zonas",
+   "persona": "A mi acompañante le da frío y a mí calor.",
+   "agente": "Listo, 20 grados para ti y 24 para tu acompañante.",
+   "acciones": [
+    {
+     "tool": "set_climate_temperature",
+     "set": {
+      "climate_temperature_driver": 20
+     }
+    },
+    {
+     "tool": "set_climate_temperature",
+     "set": {
+      "climate_temperature_passenger": 24
+     }
+    }
+   ]
+  },
+  {
+   "id": "t10",
+   "titulo": "Ventana",
+   "persona": "Abre mi ventana a la mitad.",
+   "agente": "Listo, ventana a la mitad.",
+   "acciones": [
+    {
+     "tool": "open_close_window",
+     "set": {
+      "window_driver_position": 50
+     }
+    }
+   ]
+  },
+  {
+   "id": "t11",
+   "titulo": "Lluvia fuerte",
+   "persona": "Está lloviendo durísimo, prende las luces y súbeme las ventanas.",
+   "agente": "Listo, luces prendidas y ventanas cerradas.",
+   "acciones": [
+    {
+     "tool": "set_head_lights_low_beams",
+     "set": {
+      "head_lights_low_beams": true
+     }
+    },
+    {
+     "tool": "open_close_window",
+     "set": {
+      "window_driver_position": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "t12",
+   "titulo": "Demasiado brillante",
+   "persona": "Está muy brillante aquí adentro.",
+   "agente": "¿Apago la luz ambiental o la de lectura?",
+   "pregunta": true,
+   "acciones": []
+  },
+  {
+   "id": "t12b",
+   "titulo": "Aclaración",
+   "persona": "Las dos.",
+   "agente": "Listo, apagadas.",
+   "acciones": [
+    {
+     "tool": "set_ambient_lights",
+     "set": {
+      "ambient_light": "OFF"
+     }
+    },
+    {
+     "tool": "set_reading_light",
+     "set": {
+      "reading_light_passenger": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "x01",
+   "titulo": "Techo con cortinilla",
+   "persona": "Abre el techo un poquito.",
+   "agente": "Listo, abrí la cortinilla y el techo a un tercio.",
+   "acciones": [
+    {
+     "tool": "open_close_sunshade",
+     "set": {
+      "sunshade_position": 100
+     }
+    },
+    {
+     "tool": "open_close_sunroof",
+     "set": {
+      "sunroof_position": 35
+     }
+    }
+   ]
+  },
+  {
+   "id": "x02",
+   "titulo": "Confirmación: luces altas",
+   "persona": "Pon las altas.",
+   "agente": "¿Confirmas que prendo las luces altas?",
+   "pregunta": true,
+   "confirmacion": true,
+   "acciones": []
+  },
+  {
+   "id": "x02b",
+   "titulo": "Sí",
+   "persona": "Sí, dale.",
+   "agente": "Listo, luces altas.",
+   "acciones": [
+    {
+     "tool": "set_head_lights_high_beams",
+     "set": {
+      "head_lights_high_beams": true,
+      "fog_lights": false
+     }
+    }
+   ]
+  },
+  {
+   "id": "x03",
+   "titulo": "Imposible: limpiabrisas",
+   "persona": "Quítame los limpiabrisas.",
+   "agente": "Los limpiabrisas no los controlo yo. Puedo desempañar el parabrisas si quieres.",
+   "error": true,
+   "acciones": []
+  },
+  {
+   "id": "t13",
+   "titulo": "Cierre: modo autónomo",
+   "persona": "Maneja tú.",
+   "agente": "Listo, tomo el control. Mantén las manos cerca del timón.",
+   "acciones": [
+    {
+     "tool": "set_autonomous_mode",
+     "set": {},
+     "dynamic": {
+      "controls.autodrive": true
+     }
+    }
+   ]
+  }
+ ]
+}

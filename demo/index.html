@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cabina Abierta · Demo</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --text:#e8eaf0; --muted:#9aa3b2; --accent:#ffcc00; }
+  * { box-sizing: border-box; }
+  html, body { height:100%; margin:0; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  body { display:grid; grid-template-columns: 1fr 360px; grid-template-rows: 100vh; }
+  #simwrap { position:relative; background:#000; }
+  iframe { width:100%; height:100%; border:0; display:block; }
+  #subs { position:absolute; left:0; right:0; bottom:18px; display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; }
+  .sub { max-width:70%; padding:8px 14px; border-radius:10px; font-size:18px; background:rgba(0,0,0,.65); backdrop-filter: blur(4px); }
+  .sub.persona { color:#ffd27a; } .sub.agente { color:#fff; }
+  aside { border-left:1px solid var(--line); padding:14px; overflow:auto; display:flex; flex-direction:column; gap:12px; }
+  h1 { font-size:18px; margin:0; } .muted { color:var(--muted); font-size:12px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  input, textarea, select { width:100%; background:#0c0e12; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px; font:inherit; font-size:13px; }
+  textarea { font-family: ui-monospace, Menlo, Consolas, monospace; min-height:70px; }
+  button { background:var(--accent); color:#111; border:0; border-radius:8px; padding:9px 12px; font-weight:700; cursor:pointer; font:inherit; }
+  button.sec { background:#2a2f3a; color:var(--text); }
+  .row { display:flex; gap:8px; flex-wrap:wrap; }
+  .row > button { flex:1; }
+  ol { margin:0; padding-left:18px; font-size:13px; } li { padding:3px 0; cursor:pointer; } li.now { color:var(--accent); font-weight:700; } li.done { color:var(--muted); }
+  #status { font-size:12px; color:var(--muted); white-space:pre-wrap; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px; }
+</style>
+</head>
+<body>
+<div id="simwrap">
+  <iframe id="sim" allow="autoplay; microphone"></iframe>
+  <div id="subs"><div id="subP" class="sub persona" style="display:none"></div><div id="subA" class="sub agente" style="display:none"></div></div>
+</div>
+<aside>
+  <div>
+    <h1>Cabina Abierta · Demo</h1>
+    <div class="muted">Reproduce las acciones del asistente del estudio sobre tu simulador local para grabar el video. Usa <b>Chrome o Edge</b>.</div>
+  </div>
+  <div class="card">
+    <label>URL de tu simulador (con <code>?autostart=1</code>)</label>
+    <input id="url" value="http://localhost:3000/?autostart=1&hideMenu=1">
+    <div class="row" style="margin-top:8px"><button id="btnLoad" class="sec">Cargar / reconectar</button></div>
+    <div id="status" style="margin-top:6px">sin conexión</div>
+  </div>
+  <div class="card">
+    <div class="row">
+      <button id="btnNext">Siguiente paso</button>
+      <button id="btnPlay" class="sec">Reproducir todo</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="btnReset" class="sec">Reiniciar estado</button>
+      <button id="btnStop" class="sec">Detener</button>
+    </div>
+    <label style="margin-top:8px">Voz del asistente (TTS del navegador)</label>
+    <select id="voice"><option value="">sin voz</option></select>
+    <label style="margin-top:8px">Pausa entre pasos al reproducir todo (s)</label>
+    <input id="gap" type="number" value="6" min="2" max="30">
+  </div>
+  <div class="card">
+    <label>Guion</label>
+    <ol id="steps"></ol>
+  </div>
+  <div class="card">
+    <label>Enviar a mano: <code>vehicle.set</code> (JSON)</label>
+    <textarea id="manual">{ "window_passenger_position": 60 }</textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="btnManual" class="sec">vehicle.set</button>
+      <button id="btnAgentL" class="sec">agent: listening</button>
+      <button id="btnAgentE" class="sec">agent: error</button>
+    </div>
+  </div>
+  <div class="muted">La página habla con el simulador por <code>postMessage</code> (op <code>init</code> con <code>allowOrigins:['*']</code>, solo para uso local). Los pasos vienen de <code>guion.json</code>; edítalo para demostrar tus propias acciones.</div>
+</aside>
+<script>
+const $ = (id) => document.getElementById(id);
+let guion = null, idx = 0, playing = false, reqId = 1, pending = {};
+const frame = () => $('sim').contentWindow;
+
+function call(op, ...args) {
+  return new Promise((resolve) => {
+    const id = reqId++;
+    pending[id] = resolve;
+    try { frame().postMessage({ ns: 'promptdrive', id, op, args }, '*'); } catch (e) { resolve({ ok: false, error: String(e) }); }
+    setTimeout(() => { if (pending[id]) { delete pending[id]; resolve({ ok: false, error: 'timeout' }); } }, 4000);
+  });
+}
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if (!d || d.ns !== 'promptdrive') return;
+  if (d.id && pending[d.id]) { pending[d.id](d.result); delete pending[d.id]; }
+  if (d.event && d.event !== 'tick' && d.event !== 'telemetry') log(`evento ${d.event}`);
+});
+function log(t) { $('status').textContent = t; }
+
+async function connect() {
+  log('conectando...');
+  for (let i = 0; i < 20; i++) {
+    const r = await call('init', { allowOrigins: ['*'] });
+    if (r && r.ok !== false && r.error !== 'timeout') {
+      const feats = await call('feedback.list');
+      const list = (feats && feats.value) ? feats.value.map(f => f.id).join(', ') : 'ninguna (feedback.js no cargado)';
+      log(`conectado. features de feedback: ${list}`);
+      return true;
+    }
+    await sleep(700);
+  }
+  log('no se pudo conectar: ¿está corriendo el simulador en esa URL? ¿aceptaste el permiso de WebGL?');
+  return false;
+}
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function showSub(el, text) { el.textContent = text || ''; el.style.display = text ? '' : 'none'; }
+
+function speak(text) {
+  return new Promise((resolve) => {
+    const vi = $('voice').value;
+    if (!vi || !('speechSynthesis' in window) || !text) return resolve();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = speechSynthesis.getVoices().find(v => v.voiceURI === vi);
+    if (v) u.voice = v; u.lang = (v && v.lang) || 'es-CO'; u.rate = 1.02;
+    u.onend = resolve; u.onerror = resolve;
+    speechSynthesis.speak(u);
+    setTimeout(resolve, 8000);
+  });
+}
+
+async function runStep(step) {
+  renderSteps();
+  if (step.reset) {
+    showSub($('subP'), ''); showSub($('subA'), 'Estado inicial');
+    await call('vehicle.reset', step.reset, {});
+    await call('feedback.agent', 'idle');
+    await sleep(800); showSub($('subA'), '');
+    return;
+  }
+  showSub($('subA'), '');
+  showSub($('subP'), 'Persona: ' + step.persona);
+  await call('feedback.agent', 'listening');
+  await sleep(1400);
+  await call('feedback.agent', 'thinking');
+  await sleep(900);
+  for (const a of step.acciones || []) {
+    await call('feedback.agent', 'action', { tool: a.tool, args: a.set });
+    if (a.set && Object.keys(a.set).length) {
+      const r = await call('vehicle.set', a.set);
+      if (!r || r.ok === false) log(`vehicle.set rechazado: ${JSON.stringify(r)}`);
+    }
+    if (a.dynamic) await call('dynamic.set', a.dynamic);
+    await sleep(500);
+  }
+  if (step.error) await call('feedback.agent', 'error', { text: step.agente });
+  else if (step.confirmacion) await call('feedback.agent', 'confirm', { text: step.agente });
+  else await call('feedback.agent', 'speaking', { text: step.agente, question: !!step.pregunta });
+  showSub($('subA'), 'Asistente: ' + step.agente);
+  await speak(step.agente);
+  await sleep(600);
+  await call('feedback.agent', 'idle');
+}
+
+function renderSteps() {
+  const ol = $('steps'); ol.innerHTML = '';
+  guion.pasos.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.textContent = s.titulo + (s.persona ? ` · “${s.persona}”` : '');
+    li.className = i < idx ? 'done' : (i === idx ? 'now' : '');
+    li.onclick = () => { idx = i; renderSteps(); };
+    ol.appendChild(li);
+  });
+}
+
+let busy = false;
+async function next() {
+  if (busy) return;
+  if (!guion || idx >= guion.pasos.length) { log('fin del guion'); return; }
+  busy = true; $('btnNext').disabled = true;
+  try {
+    const step = guion.pasos[idx]; idx++;
+    await runStep(step);
+    renderSteps();
+  } finally { busy = false; $('btnNext').disabled = false; }
+}
+
+async function playAll() {
+  playing = true;
+  while (playing && idx < guion.pasos.length) {
+    await next();
+    const gap = Math.max(1, Number($('gap').value) || 6);
+    for (let t = 0; t < gap * 10 && playing; t++) await sleep(100);
+  }
+  playing = false;
+}
+
+$('btnLoad').onclick = () => { $('sim').src = $('url').value; $('sim').onload = () => setTimeout(connect, 1500); };
+$('btnNext').onclick = next;
+$('btnPlay').onclick = playAll;
+$('btnStop').onclick = () => { playing = false; speechSynthesis && speechSynthesis.cancel(); };
+$('btnReset').onclick = async () => { idx = 0; await runStep(guion.pasos[0]); renderSteps(); };
+$('btnManual').onclick = async () => {
+  try { const r = await call('vehicle.set', JSON.parse($('manual').value)); log('vehicle.set -> ' + JSON.stringify(r)); }
+  catch (e) { log('JSON inválido: ' + e); }
+};
+$('btnAgentL').onclick = () => call('feedback.agent', 'listening');
+$('btnAgentE').onclick = () => call('feedback.agent', 'error', { text: 'demo' });
+
+function fillVoices() {
+  const sel = $('voice'); const cur = sel.value; sel.innerHTML = '<option value="">sin voz</option>';
+  const voices = speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('es'));
+  voices.sort((a, b) => (b.lang.includes('CO') ? 1 : 0) - (a.lang.includes('CO') ? 1 : 0));
+  for (const v of voices) { const o = document.createElement('option'); o.value = v.voiceURI; o.textContent = `${v.name} (${v.lang})`; sel.appendChild(o); }
+  if (voices.length && !cur) sel.selectedIndex = 1;
+}
+if ('speechSynthesis' in window) { fillVoices(); speechSynthesis.onvoiceschanged = fillVoices; }
+
+fetch('guion.json').then(r => r.json()).then(g => { guion = g; idx = 0; renderSteps(); }).catch(() => log('no se pudo leer guion.json (sirve esta carpeta con un servidor estático)'));
+const qs = new URLSearchParams(location.search);
+if (qs.get('sim')) $('url').value = qs.get('sim');
+$('btnLoad').click();
+</script>
+</body>
+</html>

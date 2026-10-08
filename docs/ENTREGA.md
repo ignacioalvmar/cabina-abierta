@@ -44,6 +44,6 @@ Dos personas del jurado por entrega; las diferencias de más de un punto por fil
 
 ## Integración y reconocimiento
 
-Las features con 4 en funcionalidad y al menos 3 en diseño y en código son candidatas a integrarse en `prompt-drive`. La organización puede pedir cambios pequeños en el PR (nombres, un ajuste de volumen, un comentario) antes del merge; los autores quedan en `docs/feedback/CREDITS.md` y en el historial de Git. Si dos equipos resolvieron la misma acción, se integra la mejor y la otra se cita en la nota de la integrada.
+Las features con 4 en funcionalidad y al menos 3 en diseño y en código son candidatas a integrarse en `prompt-drive`. La organización puede pedir cambios pequeños en el PR (nombres, un ajuste de volumen, un comentario) antes del merge; se integran los archivos de la feature y su nota de diseño (no `REFLEXION.md` ni `AI_LOG.md`, que se quedan en el fork); los autores quedan en `docs/feedback/CREDITS.md` y en el historial de Git. Si dos equipos resolvieron la misma acción, se integra la mejor y la otra se cita en la nota de la integrada.
 
 Por cohorte: ganador y segundo puesto, anunciados dentro de las 72 horas siguientes, con la retroalimentación de verificación y la rúbrica para todos los participantes. Al terminar la gira: la mejor feature entre las cuatro cohortes. Los mejores equipos quedan invitados a una conversación sobre los programas de maestría y doctorado de THI.

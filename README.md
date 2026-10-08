@@ -31,6 +31,42 @@ Esa falta de retroalimentación es un problema real de diseño en los carros con
 5. Graba un **video de máximo 3 minutos en inglés** mostrando cada feature con el guion de demostración (`demo/`) y explicando la decisión de diseño principal.
 6. Abre un **pull request** desde tu fork hacia prompt-drive con la plantilla que aparece sola. Ese PR es tu entrega.
 
+## Flujo de trabajo: dos carpetas, un fork, un pull request
+
+Vas a tener dos repositorios en tu computador, uno al lado del otro, nunca uno dentro del otro:
+
+```
+tu-carpeta/
+├── cabina-abierta/     este repositorio: el reto, el catálogo, el guion de demostración y las plantillas. Solo se lee.
+└── prompt-drive/       TU FORK del simulador: aquí va todo tu código y desde aquí sale el pull request.
+```
+
+1. **Fork.** En GitHub, abre `https://github.com/ignacioalvmar/prompt-drive` y pulsa **Fork**. Eso crea `github.com/<tu-usuario>/prompt-drive`, tu copia, la única a la que puedes hacer push.
+2. **Clona los dos y crea tu rama desde la etiqueta.**
+
+   ```bash
+   git clone https://github.com/ignacioalvmar/cabina-abierta.git
+   git clone https://github.com/<tu-usuario>/prompt-drive.git
+   cd prompt-drive
+   git checkout cabina-abierta-v1.0 -b cabina-abierta/<tu-equipo>
+   npm run dev                                   # http://localhost:3000
+   ```
+
+   La rama nace de la etiqueta para que todos los equipos partan del mismo estado del simulador.
+3. **Trabaja en el fork.** Tus features van en `prompt-drive/src/feedback/features/<id>.js`; cada cambio se prueba con `npm run build:feedback` y recarga. Para disparar las acciones usa la consola del navegador, `api-test.html` o el guion: sirve `cabina-abierta/demo/` en otro puerto y conéctalo a tu simulador (instrucciones en `demo/README.md`).
+4. **Documenta en el fork.** Una nota de diseño por feature en `prompt-drive/docs/feedback/<id>.md` (copia `docs/feedback/TEMPLATE_nota_de_diseno.md`, que ya está en prompt-drive), y `REFLEXION.md` y `AI_LOG.md` en la raíz de tu fork, copiados de `cabina-abierta/templates/`. Sube el video a donde quieras (YouTube sin listar, Drive) y guarda el enlace.
+5. **Entrega: push y pull request.**
+
+   ```bash
+   npm run build                                 # tiene que pasar
+   git add -A && git commit -m "Add window feedback feature"
+   git push -u origin cabina-abierta/<tu-equipo>
+   ```
+
+   GitHub te muestra en tu fork el aviso **Compare & pull request**. Ábrelo con base `ignacioalvmar/prompt-drive`, rama `main`, y como head tu fork y tu rama. La descripción viene prellenada con la plantilla del reto: equipo, features, enlace al video y lista de verificación. Ese pull request abierto es tu entrega; cuenta la hora en que lo abres. Si corriges algo después, haz push a la misma rama: el PR se actualiza solo.
+
+Lo que se integra en prompt-drive de las features ganadoras son los archivos de la feature y su nota de diseño; `REFLEXION.md` y `AI_LOG.md` se quedan en tu fork y solo los lee el jurado.
+
 ## Qué te damos
 
 - **La capa de feedback** `src/feedback/` dentro del repositorio: un registro (`CabinFeedback`) al que cada feature se suscribe declarando los campos del vehículo que le interesan; una capa DOM propia sobre el lienzo del simulador (`ctx.layer`), sin tocar el motor; ayudas de audio (`ctx.audio.play`, `ctx.audio.tone`); los estados del asistente (`listening`, `thinking`, `speaking`, `confirm`, `action`, `error`) a través de `onAgent`; y acceso a los handles del motor (`ctx.handles()`: THREE, cámara, carro, audio, consola) si quieres meterte en la escena 3D. Guía completa en `docs/GUIA_TECNICA.md`.
@@ -56,7 +92,8 @@ Las mejores features se integran al repositorio público de prompt-drive, con lo
 ## Empieza en 15 minutos
 
 ```bash
-git clone https://github.com/<tu-usuario>/prompt-drive.git     # tu fork
+git clone https://github.com/ignacioalvmar/cabina-abierta.git   # este repositorio
+git clone https://github.com/<tu-usuario>/prompt-drive.git      # tu fork (haz el fork en GitHub primero)
 cd prompt-drive && git checkout cabina-abierta-v1.0 -b cabina-abierta/<tu-equipo>
 npm run dev                                                      # http://localhost:3000
 ```
